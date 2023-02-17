@@ -14,54 +14,6 @@ const char* deviceName = "esp_wifi_01.loc";
  
 ESP8266WebServer server(80);
 
-/*
-
-class REMOTE {
-  private:
-    static int onOff_gpio; // D6
-    static int brighter_gpio; // D5
-    static int darker_gpio; // D2
-    static int colorLeft_gpio; // D1
-    static int colorRight_gpio; // D4
-    static int PHASE_TIME;
-
-    static void press_button(int button_gpio){
-      digitalWrite(button_gpio, LOW);
-      delay(REMOTE::PHASE_TIME);
-      digitalWrite(button_gpio, HIGH);
-    }
-
-  public:
-    static void toggle_power(){
-      REMOTE::press_button(REMOTE::onOff_gpio);
-    }
-
-    static void brighter() {
-      REMOTE::press_button(REMOTE::brighter_gpio);
-    }
-
-    static void darker() {
-      REMOTE::press_button(REMOTE::darker_gpio);
-    }
-
-    static void color_left() {
-      REMOTE::press_button(REMOTE::colorLeft_gpio);
-    }
-
-    static void color_right() {
-      REMOTE::press_button(REMOTE::colorRight_gpio);
-    }
-};
-
-int REMOTE::onOff_gpio = 12; // D6
-int REMOTE::brighter_gpio = 14; // D5
-int REMOTE::darker_gpio = 4; // D2
-int REMOTE::colorLeft_gpio = 5; // D1
-int REMOTE::colorRight_gpio = 2; // D4
-int REMOTE::PHASE_TIME = 500; // ms
-
-*/
-
 namespace REMOTE {
   int onOff_gpio = 12; // D6
   int brighter_gpio = 14; // D5
@@ -69,6 +21,7 @@ namespace REMOTE {
   int colorLeft_gpio = 5; // D1
   int colorRight_gpio = 2; // D4
   int PHASE_TIME = 500;
+  int COLOR_SHIFT_DELAY = 1250;
 
   void init_pins() {
     pinMode(REMOTE::onOff_gpio, OUTPUT);
@@ -81,6 +34,12 @@ namespace REMOTE {
   void press_button(int button_gpio){
     digitalWrite(button_gpio, LOW);
     delay(REMOTE::PHASE_TIME);
+    digitalWrite(button_gpio, HIGH);
+  }
+
+  void press_color_button(int button_gpio){
+    digitalWrite(button_gpio, LOW);
+    delay(REMOTE::COLOR_SHIFT_DELAY);
     digitalWrite(button_gpio, HIGH);
   }
 
@@ -97,11 +56,11 @@ namespace REMOTE {
   }
 
   void color_left() {
-    REMOTE::press_button(REMOTE::colorLeft_gpio);
+    REMOTE::press_color_button(REMOTE::colorLeft_gpio);
   }
 
   void color_right() {
-    REMOTE::press_button(REMOTE::colorRight_gpio);
+    REMOTE::press_color_button(REMOTE::colorRight_gpio);
   }
 }
 
@@ -158,7 +117,7 @@ void shift_color_left(){
 
 void shift_color_right(){
   if (server.method() == HTTP_POST) {
-    REMOTE::color_left();
+    REMOTE::color_right();
  
     DynamicJsonDocument doc(512);
     doc["status"] = "OK";
