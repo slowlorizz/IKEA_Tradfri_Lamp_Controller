@@ -13,11 +13,12 @@ class Remote
         constexpr static int right_gpio = 2; // D4
 
         constexpr static int PHASE_TIME = 500;
-        constexpr static int COLOR_PHASE_TIME = 1250;
+        constexpr static int BRIGHTNESS_PHASE_TIME = 1000;
+        constexpr static int COLOR_PHASE_TIME = 1100;
 
         inline static void press_btn(int btn_gpio){
             digitalWrite(btn_gpio, LOW);
-            delay((btn_gpio == Remote::left_gpio || btn_gpio == Remote::right_gpio ? Remote::COLOR_PHASE_TIME : Remote::PHASE_TIME));
+            delay((btn_gpio == Remote::left_gpio || btn_gpio == Remote::right_gpio ? Remote::COLOR_PHASE_TIME : (btn_gpio == Remote::brighter_gpio || btn_gpio == Remote::darker_gpio ? Remote::BRIGHTNESS_PHASE_TIME : PHASE_TIME)));
             digitalWrite(btn_gpio, HIGH);
         }
 
