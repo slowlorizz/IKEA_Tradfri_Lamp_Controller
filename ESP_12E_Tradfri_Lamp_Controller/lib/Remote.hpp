@@ -3,9 +3,62 @@
 
 #include <Arduino.h>
 
-bool powerstate = true;
-int brightness = 5;
-int color = 0;
+namespace LampStats
+{
+    bool power = true;
+    int lumen = 5;
+    int color = 0;
+
+    const int lumen_range[2] = {0, 5};
+    const int color_range[2] = {0, 8};
+
+    namespace Event 
+    {
+        void power_toggled() {
+            LampStats::power = !LampStats::power;
+
+            Serial.print("power: "); Serial.println((LampStats::power ? "On" : "Off"));
+        }
+
+        void brighter() {
+            if(LampStats::lumen < LampStats::lumen_range[1]) {
+                LampStats::lumen += 1;
+            }
+
+            Serial.print("lumen: "); Serial.println(LampStats::lumen);
+        }
+
+        void darker() {
+            if(LampStats::lumen > LampStats::lumen_range[0]){
+                LampStats::lumen -= 1;
+            }
+
+            Serial.print("lumen: "); Serial.println(LampStats::lumen);
+        }
+
+        void left() {
+            if (LampStats::color < LampStats::color_range[1]){
+                LampStats::color += 1;
+            }
+            else {
+                LampStats::color = LampStats::color_range[0];
+            }
+
+            Serial.print("color: "); Serial.println(LampStats::color);
+        }
+
+        void right() {
+            if (LampStats::color > LampStats::color_range[0]){
+                LampStats::color -= 1;
+            }
+            else {
+                LampStats::color = LampStats::color_range[1];
+            }
+
+            Serial.print("color: "); Serial.println(LampStats::color);
+        }
+    }
+}
 
 class Remote
 {
@@ -17,51 +70,20 @@ class Remote
         constexpr static int right_gpio = 9; // SD2
 
         constexpr static int PHASE_TIME = 500;
-        constexpr static int BRIGHTNESS_PHASE_TIME = 1000;
+        constexpr static int LUMEN_PHASE_TIME = 1000;
         constexpr static int COLOR_PHASE_TIME = 1100;
 
         inline static void press_btn(int btn_gpio){
             digitalWrite(btn_gpio, LOW);
-            delay((btn_gpio == Remote::left_gpio || btn_gpio == Remote::right_gpio ? Remote::COLOR_PHASE_TIME : (btn_gpio == Remote::brighter_gpio || btn_gpio == Remote::darker_gpio ? Remote::BRIGHTNESS_PHASE_TIME : PHASE_TIME)));
+            delay((btn_gpio == Remote::left_gpio || btn_gpio == Remote::right_gpio ? Remote::COLOR_PHASE_TIME : (btn_gpio == Remote::brighter_gpio || btn_gpio == Remote::darker_gpio ? Remote::LUMEN_PHASE_TIME : PHASE_TIME)));
             digitalWrite(btn_gpio, HIGH);
         }
 
-        inline static void power_toggle_event(){
-            powerstate = !powerstate;
-        }
-
-        inline static void brighter_event(){
-            if(brightness < 5) {
-                brightness += 1;
+        inline static void set_default_lumen(){
+            for(int i = 0; i < LampStats::lumen_range[1]; ++i){
+                Remote::brighter();
+                delay(0);
             }
-        }
-
-        inline static void darker_event(){
-            if(brightness > 0){
-                brightness -= 1;
-            }
-        }
-
-        inline static void color_left_event(){
-            if (color < 8){
-                color += 1;
-            }
-            else {
-                color = 0;
-            }
-
-            Serial.print("color: "); Serial.println(color);
-        }
-
-        inline static void color_right_event(){
-            if(color > 0){
-                color -= 1;
-            }
-            else {
-                color = 8;
-            }
-            
-            Serial.print("color: "); Serial.println(color);
         }
 
     public:
@@ -75,27 +97,27 @@ class Remote
 
         inline static void toggle_power(){
             Remote::press_btn(Remote::power_gpio);
-            Remote::power_toggle_event();
+            LampStats::Event::power_toggled();
         }
 
         inline static void brighter(){
             Remote::press_btn(Remote::brighter_gpio);
-            Remote::brighter_event();
+            LampStats::Event::brighter();
         }
 
         inline static void darker(){
             Remote::press_btn(Remote::darker_gpio);
-            Remote::darker_event();
+            LampStats::Event::darker();
         }
 
         inline static void color_left(){
             Remote::press_btn(Remote::left_gpio);
-            Remote::color_left_event();
+            LampStats::Event::left();
         }
 
         inline static void color_right(){
             Remote::press_btn(Remote::right_gpio);
-            Remote::color_right_event();
+            LampStats::Event::right();
         }
 
         inline static void wakeup_pins(){
@@ -113,27 +135,24 @@ class Remote
             Remote::press_btn(Remote::left_gpio);
             delay(act_timeout);
 
-            for(int i = 0; i < 5; i++){
-                Remote::brighter();
-                delay(200);
-            }
+            Remote::set_default_lumen();
         }
 
         inline static void set_power(bool state){
-            if(powerstate != state){
+            if(LampStats::power != state){
                 Remote::toggle_power();
             }
         }
 
-        inline static void set_brightness(int lvl){
-            if (brightness < lvl){
-                while (brightness < lvl && brightness != 5){
+        inline static void set_lumen(int lvl){
+            if (LampStats::lumen < lvl){
+                while (LampStats::lumen < lvl && LampStats::lumen != LampStats::lumen_range[1]){
                     Remote::brighter();
                     delay(0);
                 }
             }
-            else if(brightness > lvl){
-                while (brightness > lvl && brightness != 0){
+            else if(LampStats::lumen > lvl){
+                while (LampStats::lumen > lvl && LampStats::lumen != LampStats::lumen_range[0]){
                     Remote::darker();
                     delay(0);
                 }
@@ -141,23 +160,23 @@ class Remote
         }
 
         inline static void set_color(int lvl){
-            if(lvl > 8){
-                lvl = 8;
+            if(lvl > LampStats::color_range[1]){
+                lvl = LampStats::color_range[1];
             }
-            else if(lvl < 0)
+            else if(lvl < LampStats::color_range[0])
             {
-                lvl = 0;
+                lvl = LampStats::color_range[0];
             }
             
 
-            if (color < lvl){
-                while(color < lvl){
+            if (LampStats::color < lvl){
+                while(LampStats::color < lvl){
                     Remote::color_left();
                     delay(1750);
                 }
             }
-            else if(color > lvl){
-                while (color > lvl){
+            else if(LampStats::color > lvl){
+                while (LampStats::color > lvl){
                     Remote::color_right();
                     delay(1750);
                 }

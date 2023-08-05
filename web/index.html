@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<head>
+    <title>Lamp Control</title>
+    <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+    <h1>Lamp Control</h1>
+    <div id="control_pane">
+        <div id="lumen_c">
+            <label for="lumen_inp">lumen</label>
+            <input type="range" min="0" max="5" step="1" name="lumen_inp" id="lumen_inp" value="5" />
+            <span id="lumen_state">5</span>
+        </div>
+        <div id="color_c">
+            <form id="color_form">
+                <fieldset>
+                    <button type="button" class="color_btn" id="color_0" value="0">
+                    <button type="button" class="color_btn" id="color_1" value="1">
+                    <button type="button" class="color_btn" id="color_2" value="2">
+                    <button type="button" class="color_btn" id="color_3" value="3">
+                    <button type="button" class="color_btn" id="color_4" value="4">
+                    <button type="button" class="color_btn" id="color_5" value="5">
+                    <button type="button" class="color_btn" id="color_6" value="6">
+                    <button type="button" class="color_btn" id="color_7" value="7">
+                    <button type="button" class="color_btn" id="color_8" value="8">
+                </fieldset>
+            </form>
+        </div>
+        <div id="power_c">
+            <button type="button" id="power_btn">Power</button>
+        </div>
+        <button type="button" id="sender_btn">send</button>
+    </div>
+</body>

@@ -22,54 +22,54 @@ class API
 
         inline static void post_power_route(){
             if(WebServer.method() == HTTP_POST) {
-                API::post_success_answer();
                 Remote::toggle_power();
+                API::post_success_answer();
             }
         }
 
         inline static void post_brighter_route(){
             if(WebServer.method() == HTTP_POST) {
-                API::post_success_answer();
                 Remote::brighter();
+                API::post_success_answer();
             }
         }
 
         inline static void post_darker_route(){
             if(WebServer.method() == HTTP_POST) {
-                API::post_success_answer();
                 Remote::darker();
+                API::post_success_answer();
             }
         }
 
         inline static void post_left_route(){
             if(WebServer.method() == HTTP_POST) {
-                API::post_success_answer();
                 Remote::color_left();
+                API::post_success_answer();
             }
         }
 
         inline static void post_right_route(){
             if(WebServer.method() == HTTP_POST) {
-                API::post_success_answer();
                 Remote::color_right();
+                API::post_success_answer();
             }
         }
 
         inline static void post_set_route(){
             if(WebServer.method() == HTTP_POST) {
-                bool n_pwr_state = powerstate;
-                int n_brt_lvl = brightness;
-                int n_color_lvl = color;
+                bool n_pwr_state = LampStats::power;
+                int n_brt_lvl = LampStats::lumen;
+                int n_color_lvl = LampStats::color;
 
                 String n_brt_lvl_str = "";
                 String n_color_lvl_str = "";
 
                 if(WebServer.arg("power") != ""){
-                    n_pwr_state = WebServer.arg("power") == "on" ? true : false;
+                    n_pwr_state = (WebServer.arg("power") == "on" ? true : false);
                 }
 
-                if(WebServer.arg("brightness") != ""){
-                    n_brt_lvl_str = (String)(WebServer.arg("brightness"));
+                if(WebServer.arg("lumen") != ""){
+                    n_brt_lvl_str = (String)(WebServer.arg("lumen"));
                     n_brt_lvl = n_brt_lvl_str.toInt();
                 }
 
@@ -77,12 +77,12 @@ class API
                     n_color_lvl_str = (String)(WebServer.arg("color"));
                     n_color_lvl = n_color_lvl_str.toInt();
                 }
+                
+                Remote::set_lumen(n_brt_lvl);
+                Remote::set_color(n_color_lvl);
+                Remote::set_power(n_pwr_state);
 
                 API::post_success_answer();
-
-                Remote::set_power(n_pwr_state);
-                Remote::set_brightness(n_brt_lvl);
-                Remote::set_color(n_color_lvl);
             }
         }
 
@@ -90,9 +90,9 @@ class API
             if(WebServer.method() == HTTP_GET) {
                 DynamicJsonDocument doc(1024);
                 doc["status"] = "OK";
-                doc["power"] = (powerstate ? "On" : "Off");
-                doc["brightness"] = brightness;
-                doc["color"] = color;
+                doc["power"] = (LampStats::power ? "On" : "Off");
+                doc["lumen"] = LampStats::lumen;
+                doc["color"] = LampStats::color;
                 String buf;
                 serializeJson(doc, buf);
                 WebServer.send(201, F("application/json"), buf);
@@ -103,18 +103,18 @@ class API
             if(WebServer.method() == HTTP_GET) {
                 DynamicJsonDocument doc(512);
                 doc["status"] = "OK";
-                doc["power"] = (powerstate ? "On" : "Off");
+                doc["power"] = (LampStats::power ? "On" : "Off");
                 String buf;
                 serializeJson(doc, buf);
                 WebServer.send(201, F("application/json"), buf);
             }
         }
 
-        inline static void get_status_brightness_route(){
+        inline static void get_status_lumen_route(){
             if(WebServer.method() == HTTP_GET) {
                 DynamicJsonDocument doc(512);
                 doc["status"] = "OK";
-                doc["brightness"] = brightness;
+                doc["brightness"] = LampStats::lumen;
                 String buf;
                 serializeJson(doc, buf);
                 WebServer.send(201, F("application/json"), buf);
@@ -125,7 +125,7 @@ class API
             if(WebServer.method() == HTTP_GET) {
                 DynamicJsonDocument doc(512);
                 doc["status"] = "OK";
-                doc["color"] = color;
+                doc["color"] = LampStats::color;
                 String buf;
                 serializeJson(doc, buf);
                 WebServer.send(201, F("application/json"), buf);
@@ -142,7 +142,7 @@ class API
             WebServer.on("/set", HTTP_POST, API::post_set_route);
             WebServer.on("/status", HTTP_GET, API::get_status_route);
             WebServer.on("/status/power", HTTP_GET, API::get_status_power_route);
-            WebServer.on("/status/brightness", HTTP_GET, API::get_status_brightness_route);
+            WebServer.on("/status/lumen", HTTP_GET, API::get_status_lumen_route);
             WebServer.on("/status/color", HTTP_GET, API::get_status_color_route);
         }
 
