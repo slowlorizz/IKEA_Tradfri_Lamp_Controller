@@ -11,7 +11,7 @@
 // brightness levels: 5
 // colors: 9 (0 included) --> range: 0 - 8
 
-// http://192.168.0.211/set?power=on&brightness=3&color=1
+// http://<ip>/set?power=on&brightness=3&color=1
 
 void setup(void) {
   Remote::register_pins();
